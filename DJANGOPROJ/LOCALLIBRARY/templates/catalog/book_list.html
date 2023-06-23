@@ -1,0 +1,26 @@
+{% extends './base_generic.html' %}
+{% block contentbook_list %}
+
+<div> {{some_data}} </div>
+
+    <h1>Book List</h1>
+    {% if book_list %}
+    <p> book_list available </p>
+      <ul>
+       
+        {% for book in book_list %}
+        <li>
+          <a href="{{ book.get_absolute_url }}"> Title {{ book.title }}</a>
+        
+        </li>
+        {% empty %}
+         <p> There is no book </p>
+        {% endfor %}
+    
+    </ul>
+    {% else %}
+      <p>There is no book_list </p>
+    {% endif %}  
+
+
+    {% endblock %}

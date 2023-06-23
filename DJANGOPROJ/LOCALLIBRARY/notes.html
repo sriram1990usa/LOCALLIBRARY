@@ -1,0 +1,317 @@
+from django.shortcuts import get_object_or_404
+from .models import Article
+import os
+from django.urls import path, include
+from django.contrib import admin
+from .views import AuthorViewSet, ArticleViewSet
+from rest_framework import routers
+from django.urls import re_path
+from django.urls import include, path, re_path
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from .models import Author, Article
+from .serializers import AuthorSerializer, ArticleSerializer
+from rest_framework import viewsets
+from django.shortcuts import render
+from rest_framework.response import Response
+from .models import Article, Author
+from rest_framework import serializers
+https: // developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Tutorial_local_library_website
+
+https: // andela.com/insights/how-to-use-django-rest-framework-apiview-to-create-a-django-api-part-1/
+
+https: // www.ginkgobioworks.com/2021/02/04/creating-a-rest-api-using-django-rest-framework/
+urls.py, views.py, serializers.py models.py are
+similar to those in GIN folder, not as below
+
+<div>
+    a "typical" model, named MyModelName:
+
+    from django.db import models
+    from django.urls import reverse
+    
+    class MyModelName(models.Model):
+        """A typical class defining a model, derived from the Model class."""
+    
+        # Fields
+        my_field_name = models.CharField(max_length=20, help_text='Enter field documentation')
+        # …
+    
+        # Metadata
+        class Meta:
+            ordering = ['-my_field_name']
+    
+        # Methods
+        def get_absolute_url(self):
+            """Returns the URL to access a particular instance of MyModelName."""
+            return reverse('model-detail-view', args=[str(self.id)])
+    
+        def __str__(self):
+            """String for representing the MyModelName object (in Admin site etc.)."""
+            return self.my_field_name
+
+</div>
+ 
+
+1. CREATE/ACTIVATE VENV
+<div >
+DRF > ANDELA > virtualenv venv
+(venv)..ANDELA > venv/scripts > activate
+(vdnv)..ANDELA > dir  # venv
+</div >
+2. INSTALL DJANGO & DRF
+<div >
+()..ANDELA > pip install django
+()..ANDELA > pip install djangorestframework
+</div >
+3. CREATE DJANGO PROJ, APP, RUNSERVER-LH
+<div >
+()..ANDELA > django-admin startproject proj .
+()..ANDELA > django-admin startapp article
+()..ANDELA > dir
+proj > __init__.py, asgi.py, settings.py,  urls.py,  wsgi.py
+api > migrations, __init__.py, admin.py, apps.py, models.py, tests.py, views.py
+manage.py
+venv
+()..ANDELA > proj > settings.py
+
+SECRET_KEY = 'change me'
+if SECRET_KEY in os.environ:
+SECRET_KEY = os.environ["SECRET_KEY"]
+
+INSTALLED_APPS = [
+    'rest_framework',
+    'article',
+]
+()..ANDELA > .env
+SECRET_KEY = 'xxxxxx'
+()..ANDELA > python manage.py runserver
+localhost: 8000 > app runs
+</div >
+4. SETUP/ADD DJANGO MODELS(models.py),
+<div >
+  from django.db import models
+
+   # Create your models here.
+   class Author(models.Model):
+        name = models.CharField(max_length=255)
+        email = models.EmailField()
+
+    class Article(models.Model):
+        title = models.CharField(max_length=120)
+        description = models.TextField()
+        body = models.TextField()
+        author = models.ForeignKey(
+            'Author', related_name='articles', on_delete=models.CASCADE)
+
+run the migrations to let Django know
+   2 new tables added to the database.
+
+()..ANDELE > python manage.py makemigrations 
+()..ANDELA > python manage.py migrate
+
+()..ANDELA > python manage.py createsuperuser 
+()..ANDELA > article>admin.py 
+# to make models visible on admin page
+admin.site.register(Article)
+admin.site.register(Author)
+
+</div >
+5. SET UP DRF SERIALIZERS
+<div >
+   return response ({“articles”: articles})
+    changes list of articles in db into a python list
+    to be serialized/converted to JSON from an object.
+
+    Serializers convert complex data sets
+    like querysets and model instances into
+    native Python data types rendered as JSON,
+    or XML(along with other) data types
+    for use by API to return the data to the user
+()..ANDELA > api>serializers.py> 
+# from article.models import Author, Article
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ('name', 'email')
+
+
+class ArticleSerializer(serializers.ModelSerializer):
+    # author_id = serializers.RelatedField(source='author_id', read_only=True)
+    class Meta:
+        model = Article
+        fields = ('title', 'description', 'body', 'author')
+
+
+</div >
+6. SET UP ROUTERS - IN VIEWS.PY
+  TO API ENDPOINTS - (DJANGO) URLs
+<div >
+
+()..ANDELA > api>views.py
+BEFORE IMPLEMENTING SERIALIZERS.PY
+
+
+class AuthorViewSet(viewsets.ModelViewSet):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class ArticleViewSet(viewsets.ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+
+throws error
+because no class to serialize the Article object.
+insert serializer in views to serialize all the articles.
+
+</div >
+7. USE ROUTER-DRF -
+ROUTE A DESIRED API ENDPOINT TO VIEWSET
+create url for user to access view endpoints
+<div >
+()..ANDELA > api>urls.py 
+
+app_name = 'articles'
+
+router = routers.DefaultRouter()
+router.register(r'authorvset', AuthorViewSet)
+router.register(r'articlevset', ArticleViewSet)
+
+CONNECT/POINT DJANGO PROJ URL TO APP URL
+()..ANDELA > proj>urls.py
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('article.urls'))
+]
+</div >
+8. BROWSE API AND POST DATA AS ADMIN
+<div >
+localhost: 8000/admin
+login
+enter authors, articles as admin
+
+localhost: 8000/api/articlevset
+view articles in api or json/api format
+
+localhost: 8000/api/authorvset
+view authors in api or json/api format
+</div >
+== == ====================================================
+9. ACCESS API & CREATE DATA BY USERS USING API VIEWS
+<div >
+create new endpoint using APIViews
+allows multiple http methods in one class
+
+()..ANDELA > article>views.py 
+
+
+def post(self, request):
+    article = request.data.get('article')
+    # create an article from above data
+    serializer = ArticleSerializer(data=article)
+    if serializer.is_valid(raise_exception=True)
+       article_saved = serializer.save()
+    return Response({"success": "Article '{}' created successfully"})
+
+()..ANDELA > article>serializers.py 
+
+
+class ArticleSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=120)
+    description = serializers.CharField()
+    body = serializers.CharField()
+    author_id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        return Article.objects.create(**validated_data)
+
+
+localhost: 8000/api/
+<div >
+   the following page opens:
+    Api Root
+    The default basic root view for DefaultRouter
+
+    GET / api/
+    HTTP 200 OK
+    Allow: GET, HEAD, OPTIONS
+    Content-Type: application/json
+    Vary: Accept
+
+    {
+        "authorvset": "http://localhost:8000/api/authorvset/",
+        "articlevset": "http://localhost:8000/api/articlevset/"
+    }
+    INCASE OF ERROR:
+    delete db from root folder
+    delete __pycache__
+    delete migrations folder
+
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py migrate - -run-syncdb
+    python manage.py runserver
+</div >
+
+localhost: 8000/api/articles
+
+Raw Data
+media type: application/json
+content:
+{
+    "article": {
+        "title": "title22",
+        "description": "desc22",
+        "body": "body22",
+        "author_id": 2
+    }
+}
+created successfully
+
+localhost: 8000/api/authors
+
+</div >
+10. UPDATE(PUT) REQUEST TO ARTICLES ENDPOINT BY USERS
+<div >
+add a new path into the article urlpatterns
+()..ANDELA > article>urls.py 
+path('articles/<int:pk', ArticleView.as_view())
+
+add update function in serializers.py
+()..ANDELA > article>serializers.py 
+
+
+class ArticleSerializer(serializers.Serializer):
+    def create...
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get(
+           'desctiption', instance.description)
+        instance.body = validated_data.get('body', instance.body)
+        instance.author_id = validated_data.get(
+           'author_id', instance.author_id)
+
+        instance.save()
+        return instance
+
+()..ANDELA > article>views.py 
+
+
+class ArticleView(APIView):
+    def put(self, request, pk):
+        saved_article = get_object_or_404(Article.objects.all(), pk=pk)
+        data = request.data.get('article')
+        serializer = ArticleSerializer(
+           instance=saved_article, data=data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            article_saved = serializer.save()
+        return Response({"success": "Article '{}' updated successfully".format(article_saved)})
+
+
+</div >

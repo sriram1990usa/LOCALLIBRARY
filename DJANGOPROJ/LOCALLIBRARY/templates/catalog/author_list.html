@@ -1,0 +1,33 @@
+{% extends './base_generic.html' %}
+{% block contentauthor_list %}
+
+<div> {{some_data}} </div>
+
+    <h1>Author List</h1>
+  
+    {% if author_list %}
+    <p> author_list available </p>
+      <ul>
+       
+        {% for author in author_list %}
+       
+        <li>
+         
+          
+            <a href="{{ book.author.get_absolute_url }}"> {{ author.first_name }}</a>
+          
+          
+        </li>       
+        
+        {% empty %}
+         <p> There is no author </p>
+        {% endfor %}
+    
+    </ul>
+    {% else %}
+      <p>There is no author_list </p>
+    {% endif %}  
+
+
+    {% endblock %}
+    
