@@ -64,7 +64,7 @@ def index(request):
         'message_class' : message_class
     }
 
-    return render(request, 'weather/weather.html', context)
+    return render(request, 'weather/index.html', context)
 
 def delete_city(request, city_name):
     City.objects.get(name=city_name).delete()
